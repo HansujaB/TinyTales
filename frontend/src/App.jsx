@@ -1,67 +1,54 @@
-import { useState } from 'react'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Navbar from './components/layout/Navbar';
+import Sidebar from './components/layout/Sidebar';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
-import { useAuth0 } from '@auth0/auth0-react';
-import LoginButton from './LoginButton';
-import LogoutButton from './LogoutButton';
-import Profile from './Profile';
+import Landing from './pages/Landing';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import StoryGenerator from './pages/StoryGenerator';
+import Library from './pages/Library';
+import EmotionCorner from './pages/EmotionCorner';
+import Settings from './pages/Settings';
 
-function App() {
-  const { isAuthenticated, isLoading, error } = useAuth0();
+import useAuth from './hooks/useAuth';
 
-  if (isLoading) {
+export default function App() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
     return (
-      <div className="app-container">
-        <div className="loading-state">
-          <div className="loading-text">Loading...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="app-container">
-        <div className="error-state">
-          <div className="error-title">Oops!</div>
-          <div className="error-message">Something went wrong</div>
-          <div className="error-sub-message">{error.message}</div>
+      <div className="splash-loader">
+        <div className="splash-loader__inner">
+          <span className="splash-loader__emoji">📚</span>
+          <div className="splash-loader__dots">
+            <span></span><span></span><span></span>
+          </div>
+          <p className="splash-loader__text">Loading TinyTales...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="app-container">
-      <div className="main-card-wrapper">
-        <img 
-          src="https://cdn.auth0.com/quantum-assets/dist/latest/logos/auth0/auth0-lockup-en-ondark.png" 
-          alt="Auth0 Logo" 
-          className="auth0-logo"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-          }}
-        />
-        <h1 className="main-title">Welcome to Sample0</h1>
-        
-        {isAuthenticated ? (
-          <div className="logged-in-section">
-            <div className="logged-in-message">✅ Successfully authenticated!</div>
-            <h2 className="profile-section-title">Your Profile</h2>
-            <div className="profile-card">
-              <Profile />
-            </div>
-            <LogoutButton />
-          </div>
-        ) : (
-          <div className="action-card">
-            <p className="action-text">Get started by signing in to your account</p>
-            <LoginButton />
-          </div>
-        )}
-      </div>
-    </div>
+    <Router>
+      <Navbar />
+      <Sidebar />
+      <main className="page-content">
+        <Routes>
+          <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Landing />} />
+          <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/generate" element={<ProtectedRoute><StoryGenerator /></ProtectedRoute>} />
+          <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
+          <Route path="/emotions" element={<ProtectedRoute><EmotionCorner /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+      <footer className="footer">
+        © 2026 <span>TinyTales</span> – Imagination Unleashed ✨
+      </footer>
+    </Router>
   );
 }
-
-export default App;
